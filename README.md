@@ -58,6 +58,20 @@ The workshop is split across two sessions (two hours total), with homework in be
 
 ---
 
+## 🛠️ Local Setup
+
+This project uses Python 3.14 and the notebook dependencies listed in `requirements.txt`.
+
+```powershell
+py -3.14 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+jupyter lab
+```
+
+---
+
 ## 📝 Deliverables
 - `KNN_Workshop_Solution.ipynb`: Your notebook implementation with code and explanations.  
 - `README.md`: This file, including your name, student ID, and a brief summary of your work.  
