@@ -1,10 +1,45 @@
-ipykernel
-jupyterlab
-matplotlib
-pandas
-requests
-scikit-learn
-psycopg2-binary
-python-dotenv
-plotly
-streamlit
+# K-Nearest Neighbors Workshop
+
+CSCN8010 – Foundations of Machine Learning Frameworks
+
+## Team
+
+| Name | Student ID | Part |
+|---|---|---|
+| Sultan Atanda | 9114837 | Pipeline structure (`KNNPipeline`) and notebook integration |
+| John | [student ID] | Data acquisition (`DataLoader`, Open-Meteo API → Neon) and documentation |
+| Eche | [student ID] | Data cleaning and preprocessing (`Preprocessor`) |
+| Antonio Sainz | [student ID] | KNN training and evaluation (`KNNModel`, `Evaluator`) and reflection |
+
+## Summary
+
+We used KNN to classify each hour of 2025 in Waterloo, ON as **Clear, Cloudy, Rain or Snow**, based on temperature, humidity, dew point, pressure, cloud cover, wind, hour and month.
+
+- **Data:** 8,760 hourly records from the [Open-Meteo Historical Weather API](https://open-meteo.com/en/docs/historical-weather-api), stored in a Neon PostgreSQL table (`knn_weather`). The target comes from the WMO weather code. The columns used to build the target (`weather_code`, `rain`, `snowfall`, `precipitation`) are removed from the features to avoid leakage.
+- **Preprocessing:** extracted hour and month features, used a median imputer and `StandardScaler` fitted on the training set only, and made a stratified 80/20 split.
+- **Model:** `KNeighborsClassifier`, with k (3–25) and the distance metric tuned by 5-fold cross-validation on macro F1.
+- **Results:** best k = 3 (Euclidean). On the test set, 86.7% accuracy and 0.804 macro F1, against 45.1% and 0.155 for a majority-class baseline. Rain and Snow are the hardest classes and are mostly confused with Cloudy. When whole weeks are held out, macro F1 is about 0.61, which we treat as the realistic estimate for unseen weeks.
+- **Architecture:** ML Pipeline Pattern: `DataLoader` → `Preprocessor` → `KNNModel` → `Evaluator`, chained by `KNNPipeline`.
+
+## Files
+
+| File | What it is |
+|---|---|
+| `KNN_Workshop_Solution.ipynb` | Our solution notebook (code, results, explanations, reflection) |
+| `KNearestNeighbors_Workshop.ipynb` | Original workshop notebook from the instructor |
+| `data/waterloo_weather_2025.csv` | Cached copy of the API data |
+| `.env.example` | Template for the database connection |
+
+## How to run
+
+```bash
+python -m venv .venv
+.venv\Scripts\activate          # Windows
+source .venv/bin/activate       # macOS / Linux
+pip install -r requirements.txt
+```
+
+1. Copy `.env.example` to `.env` and set `DATABASE_URL` to your Neon connection string. If you skip this, the notebook uses the cached CSV in `data/`.
+2. Open `KNN_Workshop_Solution.ipynb` and choose **Run All**. The first run writes the data to the `knn_weather` table. Later runs read it back from Neon.
+
+The charts are interactive Plotly figures. GitHub's notebook preview doesn't show them, so to see them online, paste the notebook's GitHub link into [nbviewer](https://nbviewer.org/).

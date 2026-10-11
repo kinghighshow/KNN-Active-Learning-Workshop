@@ -1,0 +1,73 @@
+K-NEAREST NEIGHBORS WORKSHOP - PROJECT NOTES
+CSCN8010 - Foundations of Machine Learning Frameworks
+
+
+TEAM
+----
+Sultan Atanda  (9114837)  Pipeline structure (KNNPipeline) and notebook integration
+John           (9115726)  Data acquisition (DataLoader: Open-Meteo API -> Neon) and documentation
+Eche           (9078881)  Data cleaning and preprocessing (Preprocessor)
+Antonio Sainz  (9072844)  KNN training and evaluation (KNNModel, Evaluator) and reflection
+
+
+DATA
+----
+- 8,760 hourly records for Waterloo, ON (2025) from the Open-Meteo Historical Weather API:
+  https://open-meteo.com/en/docs/historical-weather-api
+- Stored in the Neon PostgreSQL table knn_weather. A cached copy is kept in data/waterloo_weather_2025.csv.
+- Target: the WMO weather_code grouped into four classes:
+    Clear  = codes 0-1
+    Cloudy = codes 2-3
+    Rain   = codes 51-67, 80-82
+    Snow   = codes 71-77, 85-86
+- Features: temperature, relative humidity, dew point, apparent temperature, surface pressure,
+  cloud cover, wind speed, wind direction, wind gusts, hour and month.
+- weather_code, rain, snowfall and precipitation are left out of the features to avoid leakage,
+  because the target is built from them.
+
+
+PREPROCESSING
+-------------
+- Extracted hour and month from the timestamp.
+- Median imputer and StandardScaler, both fitted on the training set only.
+- Stratified 80/20 train/test split.
+
+
+MODEL
+-----
+- scikit-learn KNeighborsClassifier.
+- k (3-25) and the distance metric (Euclidean or Manhattan) are tuned with 5-fold
+  cross-validation on the training set, scored by macro F1.
+
+
+RESULTS
+-------
+- Best k = 3 (Euclidean).
+- Test set: 86.7% accuracy, 0.804 macro F1.
+- Majority-class baseline: 45.1% accuracy, 0.155 macro F1.
+- Rain and Snow are the hardest classes and are mostly confused with Cloudy.
+- Removing cloud_cover drops accuracy to 74.9%, almost all of it in Clear vs Cloudy.
+- With whole weeks held out, macro F1 is about 0.61. We treat this as the realistic
+  estimate for weeks the model has never seen.
+
+
+ARCHITECTURE (ML PIPELINE PATTERN)
+----------------------------------
+DataLoader -> Preprocessor -> KNNModel -> Evaluator, chained by KNNPipeline.
+
+
+FILES
+-----
+KNN_Workshop_Solution.ipynb       Our solution notebook (code, results, explanations, reflection)
+KNearestNeighbors_Workshop.ipynb  Original workshop notebook from the instructor
+data/waterloo_weather_2025.csv    Cached copy of the API data
+.env.example                      Template for the database connection
+requirements.txt                  Python dependencies
+doc.txt                           These notes
+
+
+NOTES
+-----
+- The first notebook run writes the data to the knn_weather table. Later runs read it back from Neon.
+- The charts are interactive Plotly figures, and GitHub's notebook preview doesn't show them.
+  To see them online, paste the notebook's GitHub link into https://nbviewer.org/
